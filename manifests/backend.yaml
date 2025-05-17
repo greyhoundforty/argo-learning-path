@@ -1,0 +1,45 @@
+# Backend Component
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskhub-backend-config
+data:
+  API_LOG_LEVEL: "info"
+  ALLOW_ORIGINS: "http://taskhub-frontend"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskhub-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskhub-backend
+  template:
+    metadata:
+      labels:
+        app: taskhub-backend
+    spec:
+      containers:
+      - name: backend
+        image: docker.io/greyhoundforty/taskhub-backend:latest-arm64
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@taskhub-database:5432/taskhub"
+        - name: REDIS_URL
+          value: "redis://taskhub-redis:6379/0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskhub-backend
+spec:
+  selector:
+    app: taskhub-backend
+  ports:
+  - port: 8000
+    targetPort: 8000

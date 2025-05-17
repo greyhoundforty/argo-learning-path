@@ -1,0 +1,218 @@
+[tools]
+node = "20"
+python = "3.12"
+usage = "latest"
+
+[env]
+PROJECT_NAME = "taskhub"
+# Simplified environment variable approach
+DEFAULT_REGISTRY = "docker.io/greyhoundforty"
+DEFAULT_TAG = "latest"
+ICR_REGISTRY = "us.icr.io/rtiffany"
+
+# Frontend tasks
+[tasks.next-dev]
+description = "Run Next.js in development mode"
+run = "cd frontend && npm run dev"
+alias = "fd"
+
+[tasks.next-build]
+description = "Build Next.js for production"
+run = "cd frontend && npm run build"
+alias = "fb"
+
+[tasks.next-start]
+description = "Start Next.js production server"
+run = "cd frontend && npm start"
+alias = "fs"
+
+[tasks.next-lint]
+description = "Lint Next.js code"
+run = "cd frontend && npm run lint"
+alias = "fl"
+
+[tasks.next-analyze]
+description = "Analyze Next.js bundle size"
+run = "cd frontend && ANALYZE=true npm run build"
+alias = "fa"
+
+[tasks.next-test]
+description = "Run Next.js tests"
+run = "cd frontend && npm test"
+alias = "ft"
+
+[tasks.next-debug]
+description = "Run Next.js in debug mode"
+run = "cd frontend && NODE_OPTIONS='--inspect' npm run dev"
+alias = "fdbg"
+
+# Backend tasks
+[tasks.setup-backend]
+description = "Set up the backend project"
+run = '''
+cd backend
+mise run install-deps
+'''
+alias = "sb"
+
+[tasks.backend-dev]
+description = "Run the backend in development mode"
+run = "cd backend && mise run dev"
+alias = "bd"
+
+# Combined tasks
+[tasks.setup]
+description = "Set up the entire project"
+run = '''
+cd frontend && npm install
+cd ../backend && mise run install-deps
+'''
+
+[tasks.dev]
+description = "Run the entire application in development mode"
+run = "docker compose -f {{ config_root }}/docker-compose.yaml up"
+
+[tasks.build]
+description = "Build Docker images for local development (ARM)"
+run = '''
+docker compose -f {{ config_root }}/docker-compose.yaml build 
+'''
+
+# Docker buildx commands for multi-platform builds
+[tasks.docker-create-builder]
+description = "Create a new Docker buildx builder for multi-platform builds"
+run = '''
+docker buildx create --name taskhub-builder --driver docker-container --bootstrap
+docker buildx use taskhub-builder
+'''
+alias = "dbx-setup"
+
+# Frontend image builds
+[tasks.build-frontend-arm]
+description = "Build frontend Docker image for ARM (M1/M2 Mac)"
+run = '''
+cd {{ config_root }}/frontend
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker buildx build --platform linux/arm64 -t ${REGISTRY}/taskhub-frontend:${TAG}-arm64 .
+'''
+alias = "bfa"
+
+[tasks.build-frontend-x86]
+description = "Build frontend Docker image for x86 (IKS)"
+run = '''
+cd {{ config_root }}/frontend
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker buildx build --platform linux/amd64 -t ${REGISTRY}/taskhub-frontend:${TAG}-amd64 .
+'''
+alias = "bfx"
+
+[tasks.build-frontend-multi]
+description = "Build and push frontend Docker image for both platforms"
+run = '''
+cd {{ config_root }}/frontend
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker buildx build --platform linux/amd64,linux/arm64 -t ${REGISTRY}/taskhub-frontend:${TAG} --push .
+'''
+alias = "bfm"
+
+# Backend image builds
+[tasks.build-backend-arm]
+description = "Build backend Docker image for ARM (M1/M2 Mac)"
+run = '''
+cd {{ config_root }}/backend
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker buildx build --platform linux/arm64 -t ${REGISTRY}/taskhub-backend:${TAG}-arm64 .
+'''
+alias = "bba"
+
+[tasks.build-backend-x86]
+description = "Build backend Docker image for x86 (IKS)"
+run = '''
+cd {{ config_root }}/backend
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker buildx build --platform linux/amd64 -t ${REGISTRY}/taskhub-backend:${TAG}-amd64 .
+'''
+alias = "bbx"
+
+[tasks.build-backend-multi]
+description = "Build and push backend Docker image for both platforms"
+run = '''
+cd {{ config_root }}/backend
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker buildx build --platform linux/amd64,linux/arm64 -t ${REGISTRY}/taskhub-backend:${TAG} --push .
+'''
+alias = "bbm"
+
+# Combined multi-platform builds
+[tasks.build-all-arm]
+description = "Build all Docker images for ARM (M1/M2 Mac)"
+run = '''
+mise run build-frontend-arm
+mise run build-backend-arm
+'''
+alias = "baa"
+
+[tasks.build-all-x86]
+description = "Build all Docker images for x86 (IKS)"
+run = '''
+mise run build-frontend-x86
+mise run build-backend-x86
+'''
+alias = "bax"
+
+[tasks.build-all-multi]
+description = "Build and push all Docker images for both platforms"
+run = '''
+mise run build-frontend-multi
+mise run build-backend-multi
+'''
+alias = "bam"
+
+# Image tag and push commands
+[tasks.tag-for-iks]
+description = "Tag local images for IBM Cloud Container Registry"
+run = '''
+REGISTRY=${REGISTRY:-{{ env.DEFAULT_REGISTRY }}}
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+
+docker tag ${REGISTRY}/taskhub-frontend:${TAG}-amd64 {{ env.ICR_REGISTRY }}/taskhub-frontend:${TAG}
+docker tag ${REGISTRY}/taskhub-backend:${TAG}-amd64 {{ env.ICR_REGISTRY }}//taskhub-backend:${TAG}
+'''
+
+[tasks.push-to-iks]
+description = "Push images to IBM Cloud Container Registry"
+run = '''
+TAG=${TAG:-{{ env.DEFAULT_TAG }}}
+docker push {{ env.ICR_REGISTRY }}//taskhub-frontend:${TAG}
+docker push {{ env.ICR_REGISTRY }}//taskhub-backend:${TAG}
+'''
+
+# Kubernetes tasks
+[tasks.k8s-apply]
+description = "Apply Kubernetes manifests"
+run = '''
+kubectl apply -f ../manifests/
+'''
+
+[tasks.k8s-delete]
+description = "Delete Kubernetes resources"
+run = '''
+kubectl delete -f ../manifests/
+'''
+
+[tasks.argocd-deploy]
+description = "Deploy application using ArgoCD"
+run = '''
+argocd app create taskhub \
+  --repo $REPO_URL \
+  --path k8s \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace taskhub \
+  --sync-policy automated
+'''

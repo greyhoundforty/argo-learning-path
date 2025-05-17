@@ -1,0 +1,34 @@
+[tools]
+node = "20"
+
+[tasks.dev]
+description = "Run Next.js in development mode"
+run = "npm run dev"
+
+[tasks.build]
+description = "Build Next.js for production"
+run = "npm run build"
+
+[tasks.start]
+description = "Start Next.js production server"
+run = "npm start"
+
+[tasks.lint]
+description = "Lint Next.js code"
+run = "npm run lint"
+
+[tasks.test]
+description = "Run Next.js tests"
+run = "npm test"
+
+[tasks.analyze]
+description = "Analyze Next.js bundle size"
+run = "ANALYZE=true npm run build"
+
+[tasks.debug]
+description = "Run Next.js in debug mode"
+run = "NODE_OPTIONS='--inspect' npm run dev"
+
+[tasks.turbo]
+description = "Clean up Next.js cache"
+run = "rm -rf .next/cache"

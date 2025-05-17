@@ -1,0 +1,53 @@
+# Frontend Component
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskhub-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskhub-frontend
+  template:
+    metadata:
+      labels:
+        app: taskhub-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: docker.io/greyhoundforty/taskhub-frontend:latest-arm64
+        ports:
+        - containerPort: 80
+        env:
+        - name: REACT_APP_API_URL
+          value: "http://taskhub-backend:8000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskhub-frontend
+spec:
+  selector:
+    app: taskhub-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taskhub-frontend
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: taskhub-frontend
+            port:
+              number: 80
