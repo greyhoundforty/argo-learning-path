@@ -7,12 +7,12 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-username/your-repo.git
+    repoURL: https://github.com/greyhoundforty/argo-learning-path.git
     targetRevision: HEAD
     path: examples/canary-app
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: canarytest
   syncPolicy:
     automated:
       prune: true
