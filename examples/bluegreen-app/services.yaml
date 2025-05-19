@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bluegreen-app-active
+spec:
+  selector:
+    app: bluegreen-app
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bluegreen-app-preview
+spec:
+  selector:
+    app: bluegreen-app
+  ports:
+  - port: 80
+    targetPort: 80

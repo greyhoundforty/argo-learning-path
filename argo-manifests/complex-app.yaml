@@ -1,0 +1,21 @@
+# complex-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: complex-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-username/your-repo.git
+    targetRevision: HEAD
+    path: examples/complex-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

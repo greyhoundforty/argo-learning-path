@@ -1,5 +1,4 @@
-# Build stage
-FROM node:20-alpine AS build
+FROM --platform=linux/arm64 node:23-alpine AS build
 WORKDIR /app
 
 # Install dependencies
@@ -13,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM --platform=linux/arm64 node:23-alpine AS production
 WORKDIR /app
 
 # Copy built assets from build stage

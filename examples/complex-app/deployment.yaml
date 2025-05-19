@@ -1,0 +1,30 @@
+# path/to/complex-app/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: complex-app
+  namespace: complex-app
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Run after configmap
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: complex-app
+  template:
+    metadata:
+      labels:
+        app: complex-app
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.21.0
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        configMap:
+          name: complex-app-config

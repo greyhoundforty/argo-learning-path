@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pre-sync-job
+  namespace: complex-app
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+      - name: pre-sync
+        image: alpine:3.14
+        command: ["sh", "-c", "echo 'Running pre-sync tasks' && sleep 5"]
+      restartPolicy: Never
+  backoffLimit: 1

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: complex-app-config
+  namespace: complex-app
+  annotations:
+    argocd.argoproj.io/sync-wave: "0" # Runs after namespace, but before deployment
+data:
+  config.json: |
+    {
+      "ping": "pong"
+    }

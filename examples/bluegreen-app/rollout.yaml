@@ -1,0 +1,28 @@
+# path/to/bluegreen-app/rollout.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: bluegreen-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bluegreen-app
+  template:
+    metadata:
+      labels:
+        app: bluegreen-app
+    spec:
+      containers:
+      - name: bluegreen-app
+        image: nginx:1.21.0
+        ports:
+        - containerPort: 80
+  strategy:
+    blueGreen:
+      # Active service that points to the active ReplicaSet
+      activeService: bluegreen-app-active
+      # Preview service that points to the preview ReplicaSet
+      previewService: bluegreen-app-preview
+      # Auto promote the new ReplicaSet to the active service
+      autoPromotionEnabled: false
